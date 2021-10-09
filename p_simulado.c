@@ -21,6 +21,16 @@ int getCommandNum(char *string){
   return atoi(slice(string, 2, strlen(string)));
 }
 
+char** setChildProgram(char **program, int size,int start){
+  char** childProgram = (char**) malloc((size - start) * sizeof(char*));
+  int j = 0;
+  for(int i = start; i < size; i++){
+    childProgram[j++] = program[i];
+  }
+
+  return childProgram;
+}
+
 
 int main(){
     char **program;
@@ -36,11 +46,11 @@ int main(){
 
 
     if(pid == 0){
-      close(pipeway[1]);
+      // close(pipeway[1]);
       read(pipeway[0], &size, sizeof(int));
       read(pipeway[0], program, size * sizeof(char*));
     } else {
-      close(pipeway[0]);
+      // close(pipeway[0]);
 
       program = (char**) malloc(sizeof(char*));
 
@@ -72,14 +82,15 @@ int main(){
             perror("fork");
             exit(2);
           }
-          int resize = size - i;
+          int resize = size - i - 1;
           write(pipeway[1], &resize, sizeof(int));
-          // write(pipeway[1], )
-          size = i + getCommandNum(program[i]);
+          char **childProgram = setChildProgram(program, size, i + 1);
+          write(pipeway[1], childProgram, sizeof(childProgram));
+          size = i + getCommandNum(program[i]) + 1;
           break;
       }
     }
 
-    printf("value: %d\n", value);
+    printf("pid: %d\nvalue: %d\n", pid, value);
     wait(0);
 }
