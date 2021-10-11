@@ -5,11 +5,10 @@
 ### Conteudo
 
 - Commander  
-Processo central, envia comandos para os managers.
+Processo que inicia o sistema e envia comandos para o manager.
 
-- Managers  
+- Manager
 WIP
 
 - Processo simulado  
-Simulação de um processo comum, guarda um valor e pode fazer somas e subtrações nele (ou também pode altera-lo por completo); também pode criar um
-processo filho que realizará o fim da sua cadeia de comandos.
+Simulação de um processo comum, guarda um valor e pode fazer somas e subtrações nele (ou também pode altera-lo por completo); também pode criar um processo filho que realizará o fim da sua cadeia de comandos ou substituir a seu funcionamento por completo.
