@@ -3,6 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include "errdefs.h"
+
+#define COMMAND_LEN 20
 
 char* slice(char *string, int start, int end){
   char *buffer;
@@ -40,12 +43,20 @@ int main(){
 
     if(pipe(pipeway) == -1){
       perror("pipe");
-      exit(1);
+      exit(PIPE_ERR);
     }
 
-      program = (char**) malloc(sizeof(char*));
+
+      read(fileno(stdin), &size, sizeof(int));
+      printf("size: %d\n", size);
+      program = (char**) malloc(size * sizeof(char*));
+      for(int i = 0; i < size; i++){
+        fgets(program[i], COMMAND_LEN, stdin);
+        puts(program[i]);
+      }
 
     for(int i = 0; i < size; i++){
+      puts(program[i]);
       char *path;
       switch(program[i][0]){
         case 'S':
@@ -63,7 +74,7 @@ int main(){
         case 'F':
           if((pid = fork()) == -1){
             perror("fork");
-            exit(2);
+            exit(FORK_ERR);
           }
           if(pid == 0){
             program = setChildProgram(program, size, i + 1);
@@ -77,7 +88,7 @@ int main(){
           path = slice(program[i], 2, strlen(program[i]) - 1);
           if(execl(path, path, NULL) == -1){
             perror("exec");
-            exit(3);
+            exit(EXEC_ERR);
           }
           break;
         default:
