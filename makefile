@@ -1,20 +1,15 @@
 all:
-	gcc commander.c -o commander &
-	gcc p_simulado.c -o p_simulado &
+	gcc commander.c -o commander
 	gcc manager.c -o manager
 
 com:
-	gcc commander.c commander
-
-sim:
-	gcc p_simulado.c -o p_simulado
+	gcc commander.c -o commander
 
 man:
 	gcc manager.c -o manager
 
-debugall:
-		gcc -g commander.c -o commander &
-		gcc -g p_simulado.c -o p_simulado
+debug:
+		gcc -g commander.c -o commander
 		gcc -g manager.c -o manager
 
 debugsim:
