@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include "fila.h"
 #include "errdefs.h"
 
 #define COMMAND_LEN 25
@@ -36,7 +37,7 @@ int main(){
   int pid = -1;
   int pipeway[2];
   p_simulated *processList;
-  int *blockedList;
+  fila *blockedList;
   int processes = 1;
   int blockedProcesses = 0;
 
@@ -45,6 +46,7 @@ int main(){
   processList[0].active = 1;
   processList[0].currentInstruction = 0;
 
+  blockedList = inicializaFila();
   program = (char**) malloc(sizeof(char*));
 
   if(pipe(pipeway) == -1){
@@ -103,9 +105,10 @@ int main(){
         break;
         case 'B':
         processList[i].active = 0;
+        blockedProcesses++;
+        enfileiraFila(blockedList, i);
         break;
         case 'F':
-        //"fork"
         processList[i].end = current + getCommandNum(program[current]) + 1;
         processList = (p_simulated*) realloc(processList, ++processes * sizeof(p_simulated));
         processList[processes - 1].value = 0;
@@ -146,5 +149,7 @@ int main(){
     }
     if(processes == blockedProcesses) break;
   }}
+
+  imprimeFila(blockedList);
   wait(0);
 }
