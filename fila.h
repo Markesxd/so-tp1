@@ -1,38 +1,14 @@
-typedef struct a fila;
+typedef struct a stateList;
 
 struct a{
-  int indice;
-  fila *prox;
+  int pid;
+  stateList *next;
 };
 
-fila* inicializaFila(){
-  fila *vertice;
-  vertice = (fila*) malloc(sizeof(fila));
-  vertice->prox = NULL;
-  vertice->indice = -1;
-  return vertice;
-}
+stateList* initializeList();
 
-void enfileiraFila(fila *vertice, int indice){
-  while(vertice->prox != NULL) vertice = vertice->prox;
-  vertice->prox = inicializaFila();
-  vertice->prox->indice = indice;
-}
+void pushList(stateList *node, int id);
 
-int desenfileiraFila(fila *vertice){
-  fila *aux;
-  int indice = 0;
-  aux = vertice->prox->prox;
-  indice = vertice->prox->indice;
-  free(vertice->prox);
-  vertice->prox = aux;
-  return indice;
-}
+int pullList(stateList *node);
 
-void imprimeFila(fila *vertice){
-  while(vertice->prox != NULL){
-    vertice = vertice->prox;
-    printf("%d ", vertice->indice);
-  }
-  printf("\n");
-}
+void printList(stateList *node);

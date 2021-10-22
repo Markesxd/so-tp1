@@ -25,16 +25,17 @@ int main(){
     close(pipeway[0]);
     execl("./manager", "./manager", NULL);
   } else{
-    clock_t start = clock() / CLOCKS_PER_SEC;
-    char command = 'a';
-    while(1){
-      scanf("%c", &command);
-      printf("%c", command);
-      if(command == 'T') break;
-
-      while(start + 1 < clock() / CLOCKS_PER_SEC);
-      start++;
+    close(pipeway[0]);
+    FILE *fp;
+    fp = fopen("./commands.txt", "r");
+    char command = 'S';
+    while(command != 'T'){
+      sleep(1);
+      command = fgetc(fp);
+      if(command == '\n') continue;
+      write(pipeway[1], &command, sizeof(char));
     }
+    fclose(fp);
   }
 
   wait(0);
