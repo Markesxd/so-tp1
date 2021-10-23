@@ -3,12 +3,16 @@
 #define BLOCKED 1
 #define WAITING 2
 #define TERMINATED 3
+#define FORKING 4
+#define EXECING 5
 
 typedef struct {
+  int pid;
   char** program;
   int counter;
   int value;
   int execTime;
+  int cpuTime;
 } CPU;
 
 typedef struct {
@@ -39,4 +43,6 @@ CPU processExchange(PCBTable pcb);
 
 int execute(CPU *cpu);
 
-PCBTable save(CPU cpu);
+void save(CPU cpu, PCBTable *pcb);
+
+int addPCB(PCBTable **pcb, int ppcb, int size, int counter, int time);

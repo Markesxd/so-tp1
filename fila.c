@@ -17,6 +17,7 @@ void pushList(stateList *node, int id){
 }
 
 int pullList(stateList *node){
+  if(node->next == NULL) return -1;
   stateList *aux;
   int index = 0;
   aux = node->next->next;

@@ -24,19 +24,49 @@ int main(){
   pcb[0].state = RUNNING;
 
   char command = 'S';
-  while(command != 'T'){
+  while(1){
     int id = -1;
     int state = -1;
+    int counter = 0;
     scanf("%c", &command);
+    if(command == 'T') break;
     printf("%c\n", command);
     switch(command){
       case 'Q':
-        id = executing.pid;
-        id = pcbSerch(id, pcb, processes);
+        if(cpu.pid != executing.pid) cpu.cpuTime = 0;
+        cpu.cpuTime++;
+        cpu.pid = executing.pid;
+        if(id == EMPTY_ERR){
+          printf("No program ready to execute\n");
+          break;
+        }
+        id = pcbSerch(cpu.id, pcb, processes);
         cpu = processExchange(pcb[id]);
+        counter = cpu.counter;
         state = execute(&cpu);
-        pcb[id] = save(cpu);
-        pcb[id].state = state;
+
+        switch(state){
+          case RUNNING:
+            save(cpu, pcb + id);
+            pcb[id].state = state;
+            break;
+          case BLOCKED:
+            pcb[id].state = state;
+            pushList(blocked, executing.pid);
+            executing.pid = pullList(ready);
+            break;
+          case WAITING:
+            pcb[id].state = state;
+            pushList(ready, executing.pid);
+            executing.pid = pullList(ready);
+            break;
+          case TERMINATED:
+            pcb[id].state = state;
+            executing.pid = pullList(ready);
+            break;
+          case FORKING:
+            addPCB(&pcb, id, ++processes, counter, Time);
+        }
         Time++;
         //escalonamento
         break;
@@ -44,7 +74,7 @@ int main(){
         printf("command malformed\n");
     }
   }
-  printf("value in cpu: %d\n", cpu.value);
+  printf("value in pcb: %d\n", pcb[0].value);
 
   wait(0);
 }
@@ -151,17 +181,30 @@ int execute(CPU *cpu){
     case 'B':
       return BLOCKED;
     case 'E':
-      return TERMINATED;
+        return TERMINATED;
     case 'F':
-      return RUNNING;
+      return FORKING;
     case 'R':
-      return RUNNING;
+      return EXECING;
   }
 }
 
-PCBTable save(CPU cpu){
-  PCBTable pcb;
-  pcb.counter = cpu.counter + 1;
-  pcb.value = cpu.value;
-  pcb.cpuUsage = cpu.execTime + 1;
+void save(CPU cpu, PCBTable *pcb){
+  pcb->counter = cpu.counter + 1;
+  pcb->value = cpu.value;
+  pcb->cpuUsage = cpu.execTime + 1;
+}
+
+int addPCB(PCBTable **pcb, int ppcb, int size, int counter, int time){
+  *pcb = (PCBTable*) realloc(*pcb, size * sizeof(PCBTable));
+   *pcb[size - 1].pid = size - 1;
+   *pcb[size - 1].ppid = ppcb.pid;
+   *pcb[size - 1].counter = counter;
+   *pcb[size - 1].program = ppcb.program;
+   *pcb[size - 1].value = ppcb.value;
+   *pcb[size - 1].priority = ppcb.priority;
+   *pcb[size - 1].state = WAITING;
+   *pcb[size - 1].timeStart = time;
+   *pcb[size - 1].cpuUsage = 0;
+   return size - 1;
 }

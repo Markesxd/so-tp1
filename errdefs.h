@@ -1,3 +1,4 @@
+#define EMPTY_ERR -1
 #define PIPE_ERR 1
 #define FORK_ERR 2
 #define EXEC_ERR 3

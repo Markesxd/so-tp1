@@ -29,11 +29,12 @@ int main(){
     FILE *fp;
     fp = fopen("./commands.txt", "r");
     char command = 'S';
-    while(command != 'T'){
-      sleep(1);
+    while(1){
       command = fgetc(fp);
       if(command == '\n') continue;
       write(pipeway[1], &command, sizeof(char));
+      if(command == 'T') break;
+      sleep(1);
     }
     fclose(fp);
   }
