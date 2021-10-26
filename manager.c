@@ -36,11 +36,11 @@ int main(){
         if(cpu.pid != executing.pid) cpu.cpuTime = 0;
         cpu.cpuTime++;
         cpu.pid = executing.pid;
+        id = pcbSerch(cpu.pid, pcb, processes);
         if(id == EMPTY_ERR){
           printf("No program ready to execute\n");
           break;
         }
-        id = pcbSerch(cpu.id, pcb, processes);
         cpu = processExchange(pcb[id]);
         counter = cpu.counter;
         state = execute(&cpu);
@@ -51,11 +51,13 @@ int main(){
             pcb[id].state = state;
             break;
           case BLOCKED:
+            save(cpu, pcb + id);
             pcb[id].state = state;
             pushList(blocked, executing.pid);
             executing.pid = pullList(ready);
             break;
           case WAITING:
+            save(cpu, pcb + id);
             pcb[id].state = state;
             pushList(ready, executing.pid);
             executing.pid = pullList(ready);
@@ -65,7 +67,9 @@ int main(){
             executing.pid = pullList(ready);
             break;
           case FORKING:
+            save(cpu, pcb + id);
             addPCB(&pcb, id, ++processes, counter, Time);
+            pushList(ready, processes - 1);
         }
         Time++;
         //escalonamento
@@ -73,9 +77,9 @@ int main(){
       default:
         printf("command malformed\n");
     }
+    printf("value in pcb[%d]: %d\n", id, pcb[id].value);
   }
-  printf("value in pcb: %d\n", pcb[0].value);
-
+  printf("finish\n");
   wait(0);
 }
 
@@ -150,6 +154,7 @@ int pcbSerch(int pid,PCBTable *pcb, int size){
 
 CPU cpuInit(){
   CPU cpu;
+  cpu.pid = -1;
   cpu.program = NULL;
   cpu.counter = 0;
   cpu.value = 0;
@@ -183,6 +188,7 @@ int execute(CPU *cpu){
     case 'E':
         return TERMINATED;
     case 'F':
+      cpu->counter += getInstNum(instruction);
       return FORKING;
     case 'R':
       return EXECING;
@@ -197,14 +203,14 @@ void save(CPU cpu, PCBTable *pcb){
 
 int addPCB(PCBTable **pcb, int ppcb, int size, int counter, int time){
   *pcb = (PCBTable*) realloc(*pcb, size * sizeof(PCBTable));
-   *pcb[size - 1].pid = size - 1;
-   *pcb[size - 1].ppid = ppcb.pid;
-   *pcb[size - 1].counter = counter;
-   *pcb[size - 1].program = ppcb.program;
-   *pcb[size - 1].value = ppcb.value;
-   *pcb[size - 1].priority = ppcb.priority;
-   *pcb[size - 1].state = WAITING;
-   *pcb[size - 1].timeStart = time;
-   *pcb[size - 1].cpuUsage = 0;
+   pcb[size - 1]->pid = size - 1;
+   pcb[size - 1]->ppid = pcb[ppcb]->pid;
+   pcb[size - 1]->counter = counter;
+   pcb[size - 1]->program = pcb[ppcb]->program;
+   pcb[size - 1]->value = pcb[ppcb]->value;
+   pcb[size - 1]->priority = pcb[ppcb]->priority;
+   pcb[size - 1]->state = WAITING;
+   pcb[size - 1]->timeStart = time;
+   pcb[size - 1]->cpuUsage = 0;
    return size - 1;
 }
