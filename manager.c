@@ -29,6 +29,7 @@ int main(){
     int state = -1;
     int counter = 0;
     scanf("%c", &command);
+    if(command == '\n') continue;
     if(command == 'T') break;
     printf("%c\n", command);
     switch(command){
@@ -36,11 +37,12 @@ int main(){
         if(cpu.pid != executing.pid) cpu.cpuTime = 0;
         cpu.cpuTime++;
         cpu.pid = executing.pid;
-        id = pcbSerch(cpu.pid, pcb, processes);
-        if(id == EMPTY_ERR){
+        if(cpu.pid == EMPTY_ERR){
           printf("No program ready to execute\n");
-          break;
+          exit(EMPTY_ERR);
         }
+        id = pcbSerch(cpu.pid, pcb, processes);
+        printf("id: %d\n", id);
         cpu = processExchange(pcb[id]);
         counter = cpu.counter;
         state = execute(&cpu);
@@ -67,9 +69,14 @@ int main(){
             executing.pid = pullList(ready);
             break;
           case FORKING:
+            printf("forking\n");
             save(cpu, pcb + id);
             addPCB(&pcb, id, ++processes, counter, Time);
             pushList(ready, processes - 1);
+            break;
+          case EXECUTING:
+
+          break;
         }
         Time++;
         //escalonamento
@@ -84,15 +91,17 @@ int main(){
 }
 
 char* slice(char *string, int start, int end){
-  char *buffer;
-  int j = 0;
-
-  buffer = (char*) malloc((end - start) * sizeof(char));
-  for(int i = start; i <= end; i++){
-    buffer[j++] = string[i];
-  }
-
-  return buffer;
+  return strndup(string + start, end);
+  // char *buffer;
+  // int j = 0;
+  //
+  // buffer = (char*) malloc((end - start) * sizeof(char) + 1);
+  // for(int i = start; i < end; i++){
+  //   buffer[j++] = string[i];
+  // }
+  //
+  // buffer[j] = '\0';
+  // return buffer;
 }
 
 int getInstNum(char *string){
@@ -191,7 +200,9 @@ int execute(CPU *cpu){
       cpu->counter += getInstNum(instruction);
       return FORKING;
     case 'R':
-      return EXECING;
+      cpu->counter = 0;
+      cpu->program = imgChange(strndup(instruction + 3, ))
+      return EXECUTING;
   }
 }
 
@@ -203,14 +214,14 @@ void save(CPU cpu, PCBTable *pcb){
 
 int addPCB(PCBTable **pcb, int ppcb, int size, int counter, int time){
   *pcb = (PCBTable*) realloc(*pcb, size * sizeof(PCBTable));
-   pcb[size - 1]->pid = size - 1;
-   pcb[size - 1]->ppid = pcb[ppcb]->pid;
-   pcb[size - 1]->counter = counter;
-   pcb[size - 1]->program = pcb[ppcb]->program;
-   pcb[size - 1]->value = pcb[ppcb]->value;
-   pcb[size - 1]->priority = pcb[ppcb]->priority;
-   pcb[size - 1]->state = WAITING;
-   pcb[size - 1]->timeStart = time;
-   pcb[size - 1]->cpuUsage = 0;
+   (*pcb)[size - 1].pid = size - 1;
+   (*pcb)[size - 1].ppid = (*pcb)[ppcb].pid;
+   (*pcb)[size - 1].counter = counter + 1;
+   (*pcb)[size - 1].program = (*pcb)[ppcb].program;
+   (*pcb)[size - 1].value = (*pcb)[ppcb].value;
+   (*pcb)[size - 1].priority = (*pcb)[ppcb].priority;
+   (*pcb)[size - 1].state = WAITING;
+   (*pcb)[size - 1].timeStart = time;
+   (*pcb)[size - 1].cpuUsage = 0;
    return size - 1;
 }

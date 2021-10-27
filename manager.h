@@ -4,7 +4,7 @@
 #define WAITING 2
 #define TERMINATED 3
 #define FORKING 4
-#define EXECING 5
+#define EXECUTING 5
 
 typedef struct {
   int pid;
