@@ -4,7 +4,7 @@
 #define WAITING 2
 #define TERMINATED 3
 #define FORKING 4
-#define EXECUTING 5
+#define CHANGING 5
 
 typedef struct {
   int pid;
@@ -27,8 +27,6 @@ typedef struct {
   int cpuUsage;
 } PCBTable;
 
-char* slice(char *string, int start, int end);
-
 int getInstNum(char *string);
 
 char** readProgram(char *path);
@@ -39,10 +37,12 @@ int pcbSerch(int pid, PCBTable *pcb, int size);
 
 CPU cpuInit();
 
-CPU processExchange(PCBTable pcb);
+CPU processExchange(PCBTable pcb, int cpuTime);
 
 int execute(CPU *cpu);
 
 void save(CPU cpu, PCBTable *pcb);
 
 int addPCB(PCBTable **pcb, int ppcb, int size, int counter, int time);
+
+void reporter(PCBTable *pcb, int size, int Time);

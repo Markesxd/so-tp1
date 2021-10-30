@@ -34,7 +34,7 @@ int main(){
       if(command == '\n') continue;
       write(pipeway[1], &command, sizeof(char));
       if(command == 'T') break;
-      sleep(1);
+      // sleep(1);
     }
     fclose(fp);
   }

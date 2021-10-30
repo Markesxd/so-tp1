@@ -7,6 +7,7 @@
 #include "fila.h"
 #include "manager.h"
 
+
 int main(){
   int processes = 1;
   int Time = 0;
@@ -24,26 +25,42 @@ int main(){
   pcb[0].state = RUNNING;
 
   char command = 'S';
+  int lastP = -1;
   while(1){
     int id = -1;
     int state = -1;
     int counter = 0;
     scanf("%c", &command);
     if(command == '\n') continue;
-    if(command == 'T') break;
+    if(command == 'T'){
+      reporter(pcb, processes, Time);
+      break;
+    }
     printf("%c\n", command);
     switch(command){
       case 'Q':
-        if(cpu.pid != executing.pid) cpu.cpuTime = 0;
-        cpu.cpuTime++;
+        printf("cpu id: %d\n", cpu.pid);
+        printf("id: %d\n", executing.pid);
+          if(lastP != executing.pid){
+            cpu.execTime = 0;
+          }
+          lastP = executing.pid;
+          if(cpu.execTime > 3){
+            pushList(ready, executing.pid);
+            executing.pid = pullList(ready);
+          }
         cpu.pid = executing.pid;
         if(cpu.pid == EMPTY_ERR){
-          printf("No program ready to execute\n");
-          exit(EMPTY_ERR);
+          executing.pid = pullList(ready);
+          cpu.pid = executing.pid;
+          if(cpu.pid == EMPTY_ERR){
+            printf("No process ready to run\n");
+            continue;
+          }
         }
         id = pcbSerch(cpu.pid, pcb, processes);
-        printf("id: %d\n", id);
-        cpu = processExchange(pcb[id]);
+        printf("cpuTime: %d\n", cpu.cpuTime);
+        cpu = processExchange(pcb[id], cpu.execTime);
         counter = cpu.counter;
         state = execute(&cpu);
 
@@ -74,38 +91,31 @@ int main(){
             addPCB(&pcb, id, ++processes, counter, Time);
             pushList(ready, processes - 1);
             break;
-          case EXECUTING:
-
+          case CHANGING:
+          save(cpu, pcb + id);
           break;
         }
         Time++;
-        //escalonamento
+
+      break;
+
+      case 'P':
+        reporter(pcb, processes, Time);
+      break;
+      case 'U':
+        pushList(ready, pullList(blocked));
         break;
       default:
         printf("command malformed\n");
     }
-    printf("value in pcb[%d]: %d\n", id, pcb[id].value);
+    printf("value in pcb[%d]: %d\n\n", id, pcb[id].value);
   }
   printf("finish\n");
   wait(0);
 }
 
-char* slice(char *string, int start, int end){
-  return strndup(string + start, end);
-  // char *buffer;
-  // int j = 0;
-  //
-  // buffer = (char*) malloc((end - start) * sizeof(char) + 1);
-  // for(int i = start; i < end; i++){
-  //   buffer[j++] = string[i];
-  // }
-  //
-  // buffer[j] = '\0';
-  // return buffer;
-}
-
 int getInstNum(char *string){
-  return atoi(slice(string, 2, strlen(string)));
+  return atoi(strndup(string + 2, strlen(string)));
 }
 
 char** readProgram(char *path){
@@ -168,15 +178,18 @@ CPU cpuInit(){
   cpu.counter = 0;
   cpu.value = 0;
   cpu.execTime = 0;
+  cpu.cpuTime = 0;
   return cpu;
 }
 
-CPU processExchange(PCBTable pcb){
+CPU processExchange(PCBTable pcb, int execTime){
   CPU cpu;
   cpu.program = pcb.program;
   cpu.counter = pcb.counter;
   cpu.value = pcb.value;
-  cpu.execTime = pcb.cpuUsage;
+  cpu.execTime = execTime + 1;
+  cpu.cpuTime = pcb.cpuUsage;
+  cpu.pid = pcb.pid;
   return cpu;
 }
 
@@ -200,15 +213,16 @@ int execute(CPU *cpu){
       cpu->counter += getInstNum(instruction);
       return FORKING;
     case 'R':
-      cpu->counter = 0;
-      cpu->program = imgChange(strndup(instruction + 3, ))
-      return EXECUTING;
+      cpu->counter = -1;
+      cpu->program = readProgram(strndup(instruction + 2, strlen(instruction)));
+      return CHANGING;
   }
 }
 
 void save(CPU cpu, PCBTable *pcb){
   pcb->counter = cpu.counter + 1;
   pcb->value = cpu.value;
+  pcb->program = cpu.program;
   pcb->cpuUsage = cpu.execTime + 1;
 }
 
@@ -224,4 +238,49 @@ int addPCB(PCBTable **pcb, int ppcb, int size, int counter, int time){
    (*pcb)[size - 1].timeStart = time;
    (*pcb)[size - 1].cpuUsage = 0;
    return size - 1;
+}
+
+void reporter(PCBTable *pcb, int size, int Time){
+        pid_t reporter;
+        if((reporter = fork()) == -1){
+            printf("Reporter ERROR");
+            exit(FORK_ERR);
+        }
+
+        if(reporter == 0){
+          int id;
+          printf("********************\nEstado do sistema:\n********************\n");
+          printf("TEMPO ATUAL: %i\n", Time);
+          printf("PROCESSO EXECUTANDO:\n");
+          for(int e = 0; e < size; e++){
+            if(pcb[e].state == RUNNING){
+              printf("**********\n");
+              printf("PID:%i\nPPID: %i\nPRIORIDADE: %i\nVALOR: %i\nTEMPO DE INICIO: %i\nUSO DA CPU: %i\n",pcb[e].pid, pcb[e].ppid, pcb[e].priority, pcb[e].value, pcb[e].timeStart, pcb[e].cpuUsage);
+              printf("**********\n");
+              break;
+            }
+          }
+
+          printf("BLOQUEADO:\nFila processos bloqueados:\n");
+
+          for(int i = 0; i < size; i++){
+            if(pcb[i].state == BLOCKED){
+              printf("**********\n");
+              printf("PID:%i\nPPID: %i\nPRIORIDADE: %i\nVALOR: %i\nTEMPO DE INICIO: %i\nUSO DA CPU: %i\n",pcb[i].pid, pcb[i].ppid, pcb[i].priority, pcb[i].value, pcb[i].timeStart, pcb[i].cpuUsage);
+              printf("**********\n");
+            }
+          }
+
+          printf("PROCESSOS PRONTOS:\n");
+          for(int j = 0; j < size; j++){
+            if(pcb[j].state == WAITING){
+              printf("**********\n");
+              printf("PID:%i\nPPID: %i\nPRIORIDADE: %i\nVALOR: %i\nTEMPO DE INICIO: %i\nUSO DA CPU: %i\n",pcb[j].pid, pcb[j].ppid, pcb[j].priority, pcb[j].value, pcb[j].timeStart, pcb[j].cpuUsage);
+              printf("**********\n");
+              }
+              exit(0);
+          }
+        }else{
+          //wait(0);
+        }
 }
