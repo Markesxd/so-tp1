@@ -36,11 +36,11 @@ int main(){
       reporter(pcb, processes, Time);
       break;
     }
-    printf("%c\n", command);
+    // printf("%c\n", command);
     switch(command){
       case 'Q':
-        printf("cpu id: %d\n", cpu.pid);
-        printf("id: %d\n", executing.pid);
+        // printf("cpu id: %d\n", cpu.pid);
+        // printf("id: %d\n", executing.pid);
           if(lastP != executing.pid){
             cpu.execTime = 0;
           }
@@ -59,7 +59,7 @@ int main(){
           }
         }
         id = pcbSerch(cpu.pid, pcb, processes);
-        printf("cpuTime: %d\n", cpu.cpuTime);
+        // printf("cpuTime: %d\n", cpu.cpuTime);
         cpu = processExchange(pcb[id], cpu.execTime);
         counter = cpu.counter;
         state = execute(&cpu);
@@ -108,9 +108,9 @@ int main(){
       default:
         printf("command malformed\n");
     }
-    printf("value in pcb[%d]: %d\n\n", id, pcb[id].value);
+    // printf("value in pcb[%d]: %d\n\n", id, pcb[id].value);
   }
-  printf("finish\n");
+  printf("\nfinish\n\n");
   wait(0);
 }
 
@@ -223,7 +223,7 @@ void save(CPU cpu, PCBTable *pcb){
   pcb->counter = cpu.counter + 1;
   pcb->value = cpu.value;
   pcb->program = cpu.program;
-  pcb->cpuUsage = cpu.execTime + 1;
+  pcb->cpuUsage = cpu.cpuTime + 1;
 }
 
 int addPCB(PCBTable **pcb, int ppcb, int size, int counter, int time){
@@ -249,7 +249,7 @@ void reporter(PCBTable *pcb, int size, int Time){
 
         if(reporter == 0){
           int id;
-          printf("********************\nEstado do sistema:\n********************\n");
+          printf("\n********************\nEstado do sistema:\n********************\n");
           printf("TEMPO ATUAL: %i\n", Time);
           printf("PROCESSO EXECUTANDO:\n");
           for(int e = 0; e < size; e++){
@@ -278,9 +278,11 @@ void reporter(PCBTable *pcb, int size, int Time){
               printf("PID:%i\nPPID: %i\nPRIORIDADE: %i\nVALOR: %i\nTEMPO DE INICIO: %i\nUSO DA CPU: %i\n",pcb[j].pid, pcb[j].ppid, pcb[j].priority, pcb[j].value, pcb[j].timeStart, pcb[j].cpuUsage);
               printf("**********\n");
               }
+              printf("\n********************\n");
+              printf("\n");
               exit(0);
           }
         }else{
-          //wait(0);
+          wait(0);
         }
 }
